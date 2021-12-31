@@ -1,18 +1,13 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
-
+import pytest
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
 from channels.testing import WebsocketCommunicator
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from rest_framework_simplejwt.tokens import AccessToken
 
-import pytest
-
 from taxi.routing import application
-
 from trips.models import Trip
-
 
 TEST_CHANNEL_LAYERS = {
     'default': {
@@ -86,7 +81,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
         message = {
             'type': 'echo.message',
             'data': 'This is a test message.',
@@ -115,7 +110,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
         message = {
             'type': 'echo.message',
             'data': 'This is a test message.',
@@ -135,7 +130,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
         await communicator.send_json_to({
             'type': 'create.trip',
             'data': {
@@ -171,7 +166,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
 
         # Request a trip.
         await communicator.send_json_to({
@@ -202,7 +197,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
 
         # Send a ride request.
         await communicator.send_json_to({
@@ -281,7 +276,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
         message = {
             'type': 'update.trip',
             'data': {
@@ -313,7 +308,7 @@ class TestWebSocket:
             application=application,
             path=f'/taxi/?token={access}'
         )
-        connected, _ = await communicator.connect()
+        await communicator.connect()
 
         # Send a message to the trip group.
         message = {

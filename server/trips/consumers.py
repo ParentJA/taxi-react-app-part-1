@@ -1,11 +1,13 @@
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
-from trips.models import Trip
 from trips.serializers import NestedTripSerializer, TripSerializer
+from trips.models import Trip
 
 
 class TaxiConsumer(AsyncJsonWebsocketConsumer):
+    groups = ['test']
+
     @database_sync_to_async
     def _create_trip(self, data):
         serializer = TripSerializer(data=data)
@@ -15,6 +17,10 @@ class TaxiConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def _get_trip_data(self, trip):
         return NestedTripSerializer(trip).data
+
+    @database_sync_to_async
+    def _get_user_group(self, user):
+        return user.groups.first().name
 
     @database_sync_to_async
     def _get_trip_ids(self, user):
@@ -28,10 +34,6 @@ class TaxiConsumer(AsyncJsonWebsocketConsumer):
                 status=Trip.COMPLETED
             ).only('id').values_list('id', flat=True)
         return map(str, trip_ids)
-
-    @database_sync_to_async
-    def _get_user_group(self, user):
-        return user.groups.first().name
 
     @database_sync_to_async
     def _update_trip(self, data):
@@ -60,15 +62,6 @@ class TaxiConsumer(AsyncJsonWebsocketConsumer):
 
             await self.accept()
 
-    async def receive_json(self, content, **kwargs):
-        message_type = content.get('type')
-        if message_type == 'create.trip':
-            await self.create_trip(content)
-        elif message_type == 'echo.message':
-            await self.echo_message(content)
-        elif message_type == 'update.trip':
-            await self.update_trip(content)
-
     async def create_trip(self, message):
         data = message.get('data')
         trip = await self._create_trip(data)
@@ -81,7 +74,7 @@ class TaxiConsumer(AsyncJsonWebsocketConsumer):
         })
 
         # Add rider to trip group.
-        await self.channel_layer.group_add(
+        await self.channel_layer.group_add( # new
             group=f'{trip.id}',
             channel=self.channel_name
         )
@@ -90,9 +83,6 @@ class TaxiConsumer(AsyncJsonWebsocketConsumer):
             'type': 'echo.message',
             'data': trip_data,
         })
-
-    async def echo_message(self, message):
-        await self.send_json(message)
 
     async def update_trip(self, message):
         data = message.get('data')
@@ -139,3 +129,15 @@ class TaxiConsumer(AsyncJsonWebsocketConsumer):
                 )
 
         await super().disconnect(code)
+
+    async def echo_message(self, message):
+        await self.send_json(message)
+
+    async def receive_json(self, content, **kwargs):
+        message_type = content.get('type')
+        if message_type == 'create.trip':
+            await self.create_trip(content)
+        elif message_type == 'echo.message':
+            await self.echo_message(content)
+        elif message_type == 'update.trip':
+            await self.update_trip(content)
