@@ -99,4 +99,3 @@ class HttpTripTest(APITestCase):
         response = self.client.get(trip.get_absolute_url())
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(str(trip.id), response.data.get('id'))
-        
