@@ -5,7 +5,6 @@ import json
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-
 from PIL import Image
 from rest_framework import status
 from rest_framework.reverse import reverse
