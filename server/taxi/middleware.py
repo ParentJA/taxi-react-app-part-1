@@ -21,7 +21,7 @@ def get_user(scope):
     try:
         access_token = AccessToken(token[0])
         user = User.objects.get(id=access_token['id'])
-    except Exception as exception:
+    except Exception:
         return AnonymousUser()
     if not user.is_active:
         return AnonymousUser()
