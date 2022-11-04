@@ -3,6 +3,7 @@ from urllib.parse import parse_qs
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.db import close_old_connections
+
 from channels.auth import AuthMiddleware
 from channels.db import database_sync_to_async
 from channels.sessions import CookieMiddleware, SessionMiddleware
@@ -21,7 +22,7 @@ def get_user(scope):
     try:
         access_token = AccessToken(token[0])
         user = User.objects.get(id=access_token['id'])
-    except Exception:
+    except Exception as exception:
         return AnonymousUser()
     if not user.is_active:
         return AnonymousUser()
